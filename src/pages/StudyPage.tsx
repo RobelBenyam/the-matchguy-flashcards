@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, ThumbsUp, ThumbsDown, X, CheckCircle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ThumbsUp, ThumbsDown, CheckCircle } from 'lucide-react';
 import { Card, Deck } from '../types';
 import RichContentRenderer from '../components/RichContentRenderer';
 
@@ -30,7 +30,6 @@ export default function StudyPage() {
   }, [deckId, navigate]);
 
   const currentCard = cards[currentIndex];
-  const isLastCard = currentIndex === cards.length - 1;
   const isComplete = studiedCount === cards.length;
 
   const handleFlip = () => {

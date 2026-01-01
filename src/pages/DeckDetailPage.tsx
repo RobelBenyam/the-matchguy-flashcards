@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Plus, Play, ArrowLeft, Trash2, Edit2, RotateCcw } from 'lucide-react';
+import { Plus, Play, ArrowLeft, Trash2, Edit2 } from 'lucide-react';
 import { Card, Deck, CardContent } from '../types';
 import CardModal from '../components/CardModal';
 import RichContentRenderer from '../components/RichContentRenderer';

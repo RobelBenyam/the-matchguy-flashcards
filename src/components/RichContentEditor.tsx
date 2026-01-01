@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Image, Video, Table, Sigma, X, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Image, Video, Table, Sigma, X } from 'lucide-react';
 import { CardContent } from '../types';
 
 interface RichContentEditorProps {

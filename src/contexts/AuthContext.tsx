@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, _password: string) => {
     await new Promise(resolve => setTimeout(resolve, 500));
     const userData = { email };
     setUser(userData);

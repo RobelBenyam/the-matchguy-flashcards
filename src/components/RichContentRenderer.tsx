@@ -1,5 +1,4 @@
 import { CardContent } from '../types';
-import { X } from 'lucide-react';
 
 interface RichContentRendererProps {
   content: string | CardContent;
