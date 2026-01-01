@@ -53,6 +53,21 @@ src/
   └── main.tsx       # Entry point
 ```
 
+## Deployment
+
+This app is configured for deployment on Vercel.
+
+### Deploy to Vercel
+
+1. Push your code to GitHub (already done ✅)
+2. Go to [vercel.com](https://vercel.com) and sign in
+3. Click "New Project"
+4. Import your repository: `RobelBenyam/the-matchguy-flashcards`
+5. Vercel will auto-detect Vite settings
+6. Click "Deploy"
+
+The app will be live at a vercel.app URL, and all future pushes to main will auto-deploy.
+
 ## Next Steps
 
 - [ ] Integrate Firebase for backend storage
