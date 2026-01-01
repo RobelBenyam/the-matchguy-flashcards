@@ -203,11 +203,11 @@ function renderWithFormulas(html: string): string {
   
   let rendered = html;
   
-  rendered = rendered.replace(blockFormulaRegex, (match, formula) => {
+  rendered = rendered.replace(blockFormulaRegex, (_match, formula) => {
     return `<span class="katex-block" data-formula="${encodeURIComponent(formula.trim())}"></span>`;
   });
   
-  rendered = rendered.replace(inlineFormulaRegex, (match, formula) => {
+  rendered = rendered.replace(inlineFormulaRegex, (_match, formula) => {
     return `<span class="katex-inline" data-formula="${encodeURIComponent(formula.trim())}"></span>`;
   });
   

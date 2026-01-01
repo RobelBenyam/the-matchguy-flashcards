@@ -68,7 +68,8 @@ export default function RichContentEditor({ value, onChange, placeholder }: Rich
       const range = quill.getSelection();
       const index = range ? range.index : quill.getLength();
       quill.insertText(index, `$${formulaText}$`, 'user');
-      quill.setSelection(index + formulaText.length + 2);
+      const newIndex = index + formulaText.length + 2;
+      quill.setSelection(newIndex, 0, 'user');
     }
     setShowFormulaEditor(false);
   };
