@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, ThumbsUp, ThumbsDown, CheckCircle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ThumbsUp, ThumbsDown, CheckCircle, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { Card, Deck } from '../types';
 import RichContentRenderer from '../components/RichContentRenderer';
 
@@ -11,6 +11,7 @@ export default function StudyPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [studiedCount, setStudiedCount] = useState(0);
+  const [reviewLaterCards, setReviewLaterCards] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,11 +37,20 @@ export default function StudyPage() {
     setIsFlipped(!isFlipped);
   };
 
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+      setIsFlipped(false);
+    }
+  };
+
   const handleNext = () => {
     if (currentIndex < cards.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setIsFlipped(false);
-      setStudiedCount(studiedCount + 1);
+      if (!reviewLaterCards.has(currentCard.id)) {
+        setStudiedCount(studiedCount + 1);
+      }
     }
   };
 
@@ -56,6 +66,27 @@ export default function StudyPage() {
     const deckCards = JSON.parse(localStorage.getItem(`deck-${deckId}-cards`) || '[]');
     const updatedCards = deckCards.map((c: Card) => (c.id === currentCard.id ? updatedCard : c));
     localStorage.setItem(`deck-${deckId}-cards`, JSON.stringify(updatedCards));
+    
+    if (!reviewLaterCards.has(currentCard.id)) {
+      setStudiedCount(studiedCount + 1);
+    }
+    handleNext();
+  };
+
+  const handleReviewLater = (minutes: number) => {
+    if (!currentCard) return;
+    const newSet = new Set(reviewLaterCards);
+    newSet.add(currentCard.id);
+    setReviewLaterCards(newSet);
+    
+    setTimeout(() => {
+      const updatedSet = new Set(newSet);
+      updatedSet.delete(currentCard.id);
+      setReviewLaterCards(updatedSet);
+      if (currentIndex < cards.length - 1) {
+        handleNext();
+      }
+    }, minutes * 60 * 1000);
     
     handleNext();
   };
@@ -143,6 +174,28 @@ export default function StudyPage() {
       </div>
 
       <div className="relative">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handlePrevious}
+            disabled={currentIndex === 0}
+            className="flex items-center space-x-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Previous</span>
+          </button>
+          <span className="text-sm text-slate-600">
+            Card {currentIndex + 1} of {cards.length}
+          </span>
+          <button
+            onClick={handleNext}
+            disabled={currentIndex === cards.length - 1}
+            className="flex items-center space-x-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <span>Next</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
         <div
           className={`card-flip ${isFlipped ? 'flipped' : ''} cursor-pointer`}
           onClick={handleFlip}
@@ -165,21 +218,53 @@ export default function StudyPage() {
       </div>
 
       {isFlipped && (
-        <div className="mt-8 flex items-center justify-center space-x-3">
-          <button
-            onClick={() => handleReview(false)}
-            className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-red-300 hover:text-red-600 transition-all font-medium shadow-sm"
-          >
-            <ThumbsDown className="w-4 h-4" />
-            <span>Forgot</span>
-          </button>
-          <button
-            onClick={() => handleReview(true)}
-            className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-green-300 hover:text-green-600 transition-all font-medium shadow-sm"
-          >
-            <ThumbsUp className="w-4 h-4" />
-            <span>Remembered</span>
-          </button>
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center justify-center space-x-3">
+            <button
+              onClick={() => handleReview(false)}
+              className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-red-300 hover:text-red-600 transition-all font-medium shadow-sm"
+            >
+              <ThumbsDown className="w-4 h-4" />
+              <span>Forgot</span>
+            </button>
+            <button
+              onClick={() => handleReview(true)}
+              className="flex items-center space-x-2 px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-green-300 hover:text-green-600 transition-all font-medium shadow-sm"
+            >
+              <ThumbsUp className="w-4 h-4" />
+              <span>Remembered</span>
+            </button>
+          </div>
+          <div className="flex items-center justify-center">
+            <div className="flex items-center space-x-2 bg-white border border-slate-300 rounded-lg p-2">
+              <Clock className="w-4 h-4 text-slate-500" />
+              <span className="text-sm text-slate-600">Review later:</span>
+              <button
+                onClick={() => handleReviewLater(5)}
+                className="px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 rounded text-slate-700 transition-colors"
+              >
+                5 min
+              </button>
+              <button
+                onClick={() => handleReviewLater(15)}
+                className="px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 rounded text-slate-700 transition-colors"
+              >
+                15 min
+              </button>
+              <button
+                onClick={() => handleReviewLater(30)}
+                className="px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 rounded text-slate-700 transition-colors"
+              >
+                30 min
+              </button>
+              <button
+                onClick={() => handleReviewLater(60)}
+                className="px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 rounded text-slate-700 transition-colors"
+              >
+                1 hour
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

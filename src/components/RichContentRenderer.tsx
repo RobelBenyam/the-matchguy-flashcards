@@ -1,4 +1,9 @@
+import { useEffect, useRef } from 'react';
 import { CardContent } from '../types';
+import 'katex/dist/katex.min.css';
+import katex from 'katex';
+import 'react-quill/dist/quill.snow.css';
+import DOMPurify from 'dompurify';
 
 interface RichContentRendererProps {
   content: string | CardContent;
@@ -6,16 +11,98 @@ interface RichContentRendererProps {
 }
 
 export default function RichContentRenderer({ content, className = '' }: RichContentRendererProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    if (typeof content === 'string') {
+      const html = renderWithFormulas(content);
+      containerRef.current.innerHTML = DOMPurify.sanitize(html);
+    } else {
+      containerRef.current.innerHTML = '';
+    }
+
+    const blockFormulas = containerRef.current.querySelectorAll('.katex-block');
+    blockFormulas.forEach((el) => {
+      const formula = decodeURIComponent(el.getAttribute('data-formula') || '');
+      try {
+        katex.render(formula, el as HTMLElement, { displayMode: true });
+      } catch (e) {
+        el.textContent = `$$${formula}$$`;
+      }
+    });
+
+    const inlineFormulas = containerRef.current.querySelectorAll('.katex-inline');
+    inlineFormulas.forEach((el) => {
+      const formula = decodeURIComponent(el.getAttribute('data-formula') || '');
+      try {
+        katex.render(formula, el as HTMLElement, { displayMode: false });
+      } catch (e) {
+        el.textContent = `$${formula}$`;
+      }
+    });
+
+    const tables = containerRef.current.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (!table.hasAttribute('data-styled')) {
+        table.setAttribute('data-styled', 'true');
+        table.style.borderCollapse = 'collapse';
+        table.style.width = '100%';
+        table.style.margin = '10px 0';
+        const cells = table.querySelectorAll('th, td');
+        cells.forEach((cell) => {
+          (cell as HTMLElement).style.border = '1px solid #ddd';
+          (cell as HTMLElement).style.padding = '8px';
+        });
+      }
+    });
+  }, [content]);
+
   if (typeof content === 'string') {
-    return <div className={`whitespace-pre-wrap ${className}`}>{content}</div>;
+    return (
+      <div 
+        ref={containerRef}
+        className={`${className} ql-editor prose prose-sm max-w-none`}
+        style={{ wordBreak: 'break-word' }}
+      />
+    );
   }
 
   const richContent = content as CardContent;
 
+  const textContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!textContainerRef.current || !richContent.text) return;
+    const html = renderWithFormulas(richContent.text);
+    textContainerRef.current.innerHTML = DOMPurify.sanitize(html);
+
+    const blockFormulas = textContainerRef.current.querySelectorAll('.katex-block');
+    blockFormulas.forEach((el) => {
+      const formula = decodeURIComponent(el.getAttribute('data-formula') || '');
+      try {
+        katex.render(formula, el as HTMLElement, { displayMode: true });
+      } catch (e) {
+        el.textContent = `$$${formula}$$`;
+      }
+    });
+
+    const inlineFormulas = textContainerRef.current.querySelectorAll('.katex-inline');
+    inlineFormulas.forEach((el) => {
+      const formula = decodeURIComponent(el.getAttribute('data-formula') || '');
+      try {
+        katex.render(formula, el as HTMLElement, { displayMode: false });
+      } catch (e) {
+        el.textContent = `$${formula}$`;
+      }
+    });
+  }, [richContent.text]);
+
   return (
     <div className={`space-y-4 ${className}`}>
       {richContent.text && (
-        <div className="whitespace-pre-wrap break-words">{richContent.text}</div>
+        <div ref={textContainerRef} className="ql-editor prose prose-sm max-w-none break-words"></div>
       )}
 
       {richContent.images && richContent.images.length > 0 && (
@@ -109,3 +196,21 @@ function renderFormula(formula: string): string {
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
+
+function renderWithFormulas(html: string): string {
+  const blockFormulaRegex = /\$\$([^$]+)\$\$/g;
+  const inlineFormulaRegex = /\$([^$]+)\$/g;
+  
+  let rendered = html;
+  
+  rendered = rendered.replace(blockFormulaRegex, (match, formula) => {
+    return `<span class="katex-block" data-formula="${encodeURIComponent(formula.trim())}"></span>`;
+  });
+  
+  rendered = rendered.replace(inlineFormulaRegex, (match, formula) => {
+    return `<span class="katex-inline" data-formula="${encodeURIComponent(formula.trim())}"></span>`;
+  });
+  
+  return rendered;
+}
+

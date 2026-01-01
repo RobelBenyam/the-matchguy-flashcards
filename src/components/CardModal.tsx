@@ -16,11 +16,11 @@ export default function CardModal({ isOpen, onClose, onSubmit, card }: CardModal
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   useEffect(() => {
-    if (card) {
+    if (card && isOpen) {
       setFront(card.front);
       setBack(card.back);
       setDifficulty(card.difficulty);
-    } else {
+    } else if (isOpen && !card) {
       setFront('');
       setBack('');
       setDifficulty('medium');
